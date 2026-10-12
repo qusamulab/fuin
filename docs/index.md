@@ -103,4 +103,4 @@ See **[Architecture](reference/architecture.md)** for the full pipeline diagrams
 
 ## License
 
-[MIT](https://github.com/ykus4/fuin/blob/main/LICENSE) © 2026 yotti
+[MIT](https://github.com/qusamulab/fuin/blob/main/LICENSE) © 2026 yotti

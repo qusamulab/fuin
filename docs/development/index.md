@@ -3,7 +3,7 @@
 ## Setup
 
 ```bash
-git clone https://github.com/ykus4/fuin.git && cd fuin
+git clone https://github.com/qusamulab/fuin.git && cd fuin
 uv sync --all-extras          # --all-extras: the tests need the server deps
 uv run pre-commit install
 ```

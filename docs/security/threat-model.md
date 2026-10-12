@@ -78,5 +78,5 @@ The server is an internal build tool, not a public service:
 
 ## Reporting a vulnerability
 
-Open a [security advisory](https://github.com/ykus4/fuin/security/advisories/new)
+Open a [security advisory](https://github.com/qusamulab/fuin/security/advisories/new)
 rather than a public issue.

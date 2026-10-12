@@ -10,7 +10,7 @@ CLI users are not made to install FastAPI, SQLAlchemy and friends.
     to install on the host.
 
     ```bash
-    git clone https://github.com/ykus4/fuin.git && cd fuin
+    git clone https://github.com/qusamulab/fuin.git && cd fuin
     cp .env.example .env          # set FUIN_API_KEY to any secret string
     docker compose up --build
     ```

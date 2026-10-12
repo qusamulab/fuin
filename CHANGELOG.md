@@ -185,7 +185,7 @@ before upgrading.**
 
 ### Added
 
-- **Documentation site** at <https://ykus4.github.io/fuin> — 14 pages covering
+- **Documentation site** at <https://qusamulab.github.io/fuin> — 14 pages covering
   installation, all five interfaces, configuration, the API, architecture,
   security and development. Built with `--strict` in CI and deployed to GitHub
   Pages.
@@ -214,22 +214,22 @@ before upgrading.**
 
 ## [1.1.2] - 2026-05-09
 
-See the [release notes](https://github.com/ykus4/fuin/releases/tag/v1.1.2).
+See the [release notes](https://github.com/qusamulab/fuin/releases/tag/v1.1.2).
 
 ## [1.1.1] - 2026-05-07
 
-See the [release notes](https://github.com/ykus4/fuin/releases/tag/v1.1.1).
+See the [release notes](https://github.com/qusamulab/fuin/releases/tag/v1.1.1).
 
 ## [1.1.0] - 2026-05-07
 
-See the [release notes](https://github.com/ykus4/fuin/releases/tag/v1.1.0).
+See the [release notes](https://github.com/qusamulab/fuin/releases/tag/v1.1.0).
 
 ## [1.0.0] - 2026-05-02
 
 Initial release.
 
-[2.0.0]: https://github.com/ykus4/fuin/compare/v1.1.2...v2.0.0
-[1.1.2]: https://github.com/ykus4/fuin/compare/v1.1.1...v1.1.2
-[1.1.1]: https://github.com/ykus4/fuin/compare/v1.1.0...v1.1.1
-[1.1.0]: https://github.com/ykus4/fuin/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/ykus4/fuin/releases/tag/v1.0.0
+[2.0.0]: https://github.com/qusamulab/fuin/compare/v1.1.2...v2.0.0
+[1.1.2]: https://github.com/qusamulab/fuin/compare/v1.1.1...v1.1.2
+[1.1.1]: https://github.com/qusamulab/fuin/compare/v1.1.0...v1.1.1
+[1.1.0]: https://github.com/qusamulab/fuin/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/qusamulab/fuin/releases/tag/v1.0.0

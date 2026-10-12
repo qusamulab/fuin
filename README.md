@@ -7,12 +7,12 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Python](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/)
-[![CI](https://github.com/ykus4/fuin/actions/workflows/ci.yml/badge.svg)](https://github.com/ykus4/fuin/actions/workflows/ci.yml)
+[![CI](https://github.com/qusamulab/fuin/actions/workflows/ci.yml/badge.svg)](https://github.com/qusamulab/fuin/actions/workflows/ci.yml)
 
-**[📖 Documentation](https://ykus4.github.io/fuin)** ·
-[Quickstart](https://ykus4.github.io/fuin/getting-started/quickstart/) ·
-[Configuration](https://ykus4.github.io/fuin/reference/configuration/) ·
-[Threat model](https://ykus4.github.io/fuin/security/threat-model/)
+**[📖 Documentation](https://qusamulab.github.io/fuin)** ·
+[Quickstart](https://qusamulab.github.io/fuin/getting-started/quickstart/) ·
+[Configuration](https://qusamulab.github.io/fuin/reference/configuration/) ·
+[Threat model](https://qusamulab.github.io/fuin/security/threat-model/)
 
 </div>
 
@@ -31,7 +31,7 @@ runtime. Fully offline.
 ## Quick start
 
 ```bash
-git clone https://github.com/ykus4/fuin.git && cd fuin
+git clone https://github.com/qusamulab/fuin.git && cd fuin
 cp .env.example .env          # set FUIN_API_KEY to any secret string
 docker compose up --build
 ```
@@ -44,25 +44,25 @@ Or from the command line:
 fuin-pack pack MyApp.apk MyApp-protected.apk --report
 ```
 
-→ **[Full quickstart](https://ykus4.github.io/fuin/getting-started/quickstart/)**
+→ **[Full quickstart](https://qusamulab.github.io/fuin/getting-started/quickstart/)**
 
 ## Documentation
 
 | | |
 |---|---|
-| [Installation](https://ykus4.github.io/fuin/getting-started/installation/) | Docker, pip, local development setup |
-| [CLI](https://ykus4.github.io/fuin/guide/cli/) · [REST API](https://ykus4.github.io/fuin/guide/rest-api/) · [Web UI](https://ykus4.github.io/fuin/guide/web-ui/) | Everyday usage |
-| [Gradle plugin](https://ykus4.github.io/fuin/guide/gradle-plugin/) · [GitHub Action](https://ykus4.github.io/fuin/guide/github-actions/) | Build integration |
-| [Configuration](https://ykus4.github.io/fuin/reference/configuration/) | Every environment variable |
-| [Architecture](https://ykus4.github.io/fuin/reference/architecture/) | Pack-time and runtime pipelines |
-| [Protection layers](https://ykus4.github.io/fuin/security/protection-layers/) · [Threat model](https://ykus4.github.io/fuin/security/threat-model/) | What it does and does not protect against |
-| [Development](https://ykus4.github.io/fuin/development/) | Tests, linting, migrations, contributing |
-| [Changelog](https://ykus4.github.io/fuin/changelog/) | Release history and migration notes |
+| [Installation](https://qusamulab.github.io/fuin/getting-started/installation/) | Docker, pip, local development setup |
+| [CLI](https://qusamulab.github.io/fuin/guide/cli/) · [REST API](https://qusamulab.github.io/fuin/guide/rest-api/) · [Web UI](https://qusamulab.github.io/fuin/guide/web-ui/) | Everyday usage |
+| [Gradle plugin](https://qusamulab.github.io/fuin/guide/gradle-plugin/) · [GitHub Action](https://qusamulab.github.io/fuin/guide/github-actions/) | Build integration |
+| [Configuration](https://qusamulab.github.io/fuin/reference/configuration/) | Every environment variable |
+| [Architecture](https://qusamulab.github.io/fuin/reference/architecture/) | Pack-time and runtime pipelines |
+| [Protection layers](https://qusamulab.github.io/fuin/security/protection-layers/) · [Threat model](https://qusamulab.github.io/fuin/security/threat-model/) | What it does and does not protect against |
+| [Development](https://qusamulab.github.io/fuin/development/) | Tests, linting, migrations, contributing |
+| [Changelog](https://qusamulab.github.io/fuin/changelog/) | Release history and migration notes |
 
 > [!WARNING]
 > The AES key is bundled inside the APK by design. That defeats static analysis, not
 > an attacker who controls the device. Read the
-> [threat model](https://ykus4.github.io/fuin/security/threat-model/) before shipping.
+> [threat model](https://qusamulab.github.io/fuin/security/threat-model/) before shipping.
 
 ## License
 
