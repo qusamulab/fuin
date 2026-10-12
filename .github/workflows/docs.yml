@@ -1,7 +1,7 @@
 name: Docs
 
 # Publishes the MkDocs site to GitHub Pages. mkdocs.yml already declares
-# site_url: https://ykus4.github.io/fuin, but nothing was deploying it.
+# site_url: https://qusamulab.github.io/fuin, but nothing was deploying it.
 #
 # Requires Settings → Pages → Source = "GitHub Actions" to be enabled once.
 

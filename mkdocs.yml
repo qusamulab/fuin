@@ -1,8 +1,8 @@
 site_name: fuin
 site_description: Android APK Packer — protect bytecode, block cheating, resist reverse engineering
-site_url: https://ykus4.github.io/fuin
-repo_url: https://github.com/ykus4/fuin
-repo_name: ykus4/fuin
+site_url: https://qusamulab.github.io/fuin
+repo_url: https://github.com/qusamulab/fuin
+repo_name: qusamulab/fuin
 edit_uri: edit/main/docs/
 
 theme:
@@ -55,7 +55,7 @@ plugins:
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/ykus4/fuin
+      link: https://github.com/qusamulab/fuin
 
 nav:
   - Home: index.md

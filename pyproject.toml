@@ -26,9 +26,9 @@ server = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/ykus4/fuin"
-Documentation = "https://ykus4.github.io/fuin"
-Source = "https://github.com/ykus4/fuin"
+Homepage = "https://github.com/qusamulab/fuin"
+Documentation = "https://qusamulab.github.io/fuin"
+Source = "https://github.com/qusamulab/fuin"
 
 [project.scripts]
 fuin-pack   = "fuin.cli:main"

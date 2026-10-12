@@ -4,7 +4,7 @@ fuin ships a composite action, so a release workflow can pack the APK it just bu
 
 ```yaml
 - name: Pack APK with fuin
-  uses: ykus4/fuin@main
+  uses: qusamulab/fuin@main
   with:
     input-apk: app/build/outputs/apk/release/app-release.apk
     output-apk: app/build/outputs/apk/release/app-release-packed.apk
@@ -76,7 +76,7 @@ jobs:
         run: ./gradlew assembleRelease
 
       - name: Pack APK with fuin
-        uses: ykus4/fuin@main
+        uses: qusamulab/fuin@main
         with:
           input-apk: app/build/outputs/apk/release/app-release.apk
           output-apk: app-release-packed.apk

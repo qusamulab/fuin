@@ -10,7 +10,7 @@ The original is never modified in place.
 The fastest way to see fuin work.
 
 ```bash
-git clone https://github.com/ykus4/fuin.git && cd fuin
+git clone https://github.com/qusamulab/fuin.git && cd fuin
 cp .env.example .env          # set FUIN_API_KEY to any secret string
 docker compose up --build
 ```
