@@ -152,9 +152,21 @@ fuin/
 │       ├── pipeline.py        # the only boundary into the core packer
 │       ├── jobs.py            # in-memory job store
 │       ├── background.py      # detached-task helper
+│       ├── files.py           # scoped temporary APK files
+│       ├── uploads.py         # HTTP upload validation and size limits
 │       ├── routers/           # HTTP routes by resource
 │       ├── services/          # pack, cleanup, webhook
-│       └── static/index.html  # web UI
+│       └── static/            # web UI, served without a frontend build step
+│           ├── index.html     # page structure
+│           ├── styles.css     # visual styles
+│           └── js/           # native JavaScript modules
+│               ├── app.js       # initialization and page events
+│               ├── api.js       # API key, authenticated requests, downloads
+│               ├── analysis.js  # APK selection and encryption targets
+│               ├── pack.js      # pack submission, SSE, result display
+│               ├── progress.js  # progress bar and stages
+│               ├── apps.js      # packed apps and ProGuard mappings
+│               └── ui.js        # shared formatting and metadata rendering
 ├── jvm/
 │   ├── stub/                  # Android stub (Kotlin, minSdk 24)
 │   │   └── app/src/main/java/com/fuin/stub/
@@ -203,7 +215,16 @@ routers/  →  services/  →  repositories.py  →  database.py
 ```
 
 `pipeline.py` is the single boundary into the packer: nothing under `server/` imports
-`fuin.packer`, `fuin.analyze` or `fuin.apk_info` directly.
+`fuin.packer` directly outside that module. Routes construct a `PackOptions` value
+and pass it unchanged to the background job, which keeps omitted protection
+options distinct from explicit `false` values. Upload validation lives outside
+`routers/`, and analysis and packing share scoped temporary-file cleanup.
+
+**Web UI** (`server/static/`) uses native ES modules, with `app.js` as its entry
+point. Feature modules depend on `api.js` for authenticated requests and `ui.js`
+for shared presentation helpers. DOM events use listeners rather than global
+functions in inline handlers, including buttons created when results are rendered.
+All frontend assets ship in the Python wheel; no Node.js build is required.
 
 **Stub** (`jvm/stub/`) is compiled to `stub.dex` and committed, so packing needs no
 Android SDK. Rebuild it with `cd jvm/stub && ./gradlew :app:assembleRelease`, or point

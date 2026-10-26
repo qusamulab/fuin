@@ -11,11 +11,15 @@ open <http://localhost:8000>.
 1. **Enter your API key** — the value of `FUIN_API_KEY` — and press **Save**. It is
    kept in browser storage and sent as `X-API-Key` on every request.
 2. **Drop an `.apk`** onto the upload area, or click to browse.
-3. **Watch progress.** The UI subscribes to
+3. **Select encryption targets.** DEX files are always encrypted. Toggle individual
+   native libraries and assets, then choose the runtime protection options.
+4. **Press Pack APK and watch progress.** The UI subscribes to
    [`GET /jobs/{id}/stream`](rest-api.md#stream-progress) and shows each stage as it
    happens: `patching_manifest` → `encrypting_dex` → `injecting` → `aligning` →
    `signing` → `done`.
-4. **Download** the packed APK when the job finishes.
+5. **Download** the packed APK when the job finishes.
+
+![Web UI recording: select encryption targets, pack an APK, download it and upload a mapping](../demo.gif)
 
 ## Packed app list
 

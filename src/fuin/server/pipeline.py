@@ -11,19 +11,16 @@ import dataclasses
 import logging
 import os
 import uuid
-from collections.abc import Callable
 
 from fuin.apk import get_apk_info
 from fuin.contract import PRIMARY_DEX
-from fuin.packer import PackOptions, PackResult, pack_apk
+from fuin.packer import PackOptions, PackResult, ProgressCallback, pack_apk
 from fuin.reporting import analyze_targets as _analyze_targets
 from fuin.reporting import generate_report
 from fuin.reporting.analyze import TargetAnalysis
 from fuin.server.config import get_server_settings
 
 log = logging.getLogger(__name__)
-
-ProgressCallback = Callable[[str, int], None]
 
 __all__ = [
     "PackOptions",

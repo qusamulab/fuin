@@ -1,6 +1,11 @@
+import io
 import json
 import os
+import re
 import time
+import zipfile
+from html.parser import HTMLParser
+from urllib.parse import urljoin
 
 import pytest
 from fastapi.testclient import TestClient
@@ -34,6 +39,41 @@ def test_ui_accessible(client):
     resp = client.get("/")
     assert resp.status_code == 200
     assert "text/html" in resp.headers["content-type"]
+
+
+def test_ui_assets_and_module_imports_are_served_without_auth(client):
+    class Assets(HTMLParser):
+        urls: list[str]
+
+        def __init__(self):
+            super().__init__()
+            self.urls = []
+
+        def handle_starttag(self, tag, attrs):
+            attributes = dict(attrs)
+            if tag == "script" and attributes.get("src"):
+                self.urls.append(attributes["src"])
+            if tag == "link" and attributes.get("rel") == "stylesheet":
+                self.urls.append(attributes["href"])
+
+    assets = Assets()
+    assets.feed(client.get("/").text)
+    assert assets.urls
+    pending = list(assets.urls)
+    visited = set()
+    while pending:
+        url = pending.pop()
+        if url in visited:
+            continue
+        visited.add(url)
+        response = client.get(url)
+        assert response.status_code == 200, url
+        if url.endswith(".js"):
+            assert "javascript" in response.headers["content-type"]
+            imports = re.findall(r'from\s+"([^"]+)"', response.text)
+            pending.extend(urljoin(url, module) for module in imports)
+        elif url.endswith(".css"):
+            assert "text/css" in response.headers["content-type"]
 
 
 def test_pack_requires_auth(client):
@@ -266,6 +306,59 @@ def test_analyze_form_options_match_cli_selection(client):
     assert [entry["name"] for entry in result["assets"]["files"]] == ["assets/encrypt.json"]
     assert result["summary"]["total_files"] == 2
     assert 0 <= result["summary"]["coverage_percent"] <= 100
+
+
+@pytest.mark.parametrize("explicit", [False, True])
+def test_pack_form_preserves_selection_and_protection_options(client, monkeypatch, explicit):
+    monkeypatch.setenv("FUIN_ROOT_DETECTION", "true")
+    monkeypatch.setenv("FUIN_EMULATOR_DETECTION", "true")
+    data = {
+        "app_class": "com.example.MyApp",
+        "encrypt_native": "false",
+        "exclude_files": " assets/keep.json, ,",
+    }
+    if explicit:
+        monkeypatch.setenv("FUIN_ENCRYPT_STRINGS", "true")
+        data.update(root_detection="false", emulator_detection="false", encrypt_strings="false")
+    response = client.post(
+        "/pack",
+        files={
+            "file": (
+                "test.apk",
+                make_minimal_apk(
+                    extra_files={
+                        "lib/arm64-v8a/libtest.so": b"library",
+                        "assets/keep.json": b"keep",
+                        "assets/encrypt.json": b"encrypt",
+                    }
+                ),
+                "application/octet-stream",
+            )
+        },
+        data=data,
+        headers={"X-API-Key": API_KEY},
+    )
+    assert response.status_code == 200
+    status = _await_terminal(client, response.json()["job_id"])
+    assert status["status"] == "done", status
+
+    app_id = status["result"]["app_id"]
+    download = client.get(f"/apps/{app_id}/download", headers={"X-API-Key": API_KEY})
+    assert download.status_code == 200
+    with zipfile.ZipFile(io.BytesIO(download.content)) as packed:
+        assert packed.read("lib/arm64-v8a/libtest.so") == b"library"
+        assert packed.read("assets/keep.json") == b"keep"
+        assert "assets/encrypt.json" not in packed.namelist()
+        assert json.loads(packed.read("assets/res_map.json")).keys() == {"assets/encrypt.json"}
+        assert packed.read("assets/original_app_class.txt") == b"com.example.MyApp"
+        if explicit:
+            assert "assets/security_policy.json" not in packed.namelist()
+            assert "assets/string_key.bin" not in packed.namelist()
+        else:
+            assert json.loads(packed.read("assets/security_policy.json")) == {
+                "root_detection": True,
+                "emulator_detection": True,
+            }
 
 
 def _apk_without_dex() -> bytes:

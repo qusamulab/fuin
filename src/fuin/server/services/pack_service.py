@@ -3,10 +3,7 @@ persists results to the database, and dispatches webhooks.
 """
 
 import asyncio
-import contextlib
 import logging
-import os
-import tempfile
 from datetime import UTC, datetime
 from typing import Any
 
@@ -14,6 +11,7 @@ from sqlalchemy.orm import Session
 
 from fuin.server.config import get_server_settings
 from fuin.server.database import App
+from fuin.server.files import temporary_apk
 from fuin.server.jobs import Job, JobStatus
 from fuin.server.pipeline import PackOptions, analyze_apk, run_pipeline
 from fuin.server.repositories import AppRepository, JobRepository
@@ -77,96 +75,63 @@ async def run_pack_job(
     job: Job,
     apk_bytes: bytes,
     *,
-    app_class: str,
     webhook_url: str,
-    encrypt_native: bool,
-    encrypt_assets: bool,
-    encrypt_strings: bool | None,
-    root_detection: bool | None,
-    emulator_detection: bool | None,
-    exclude_files: tuple[str, ...],
+    options: PackOptions,
 ) -> None:
     """Run the pack pipeline asynchronously and persist results."""
-    tmp_path: str | None = None
     try:
-        job.push({"status": JobStatus.running})
-        update_job_record(engine, job.job_id, status="running")
+        with temporary_apk(apk_bytes) as tmp_path:
+            job.push({"status": JobStatus.running})
+            update_job_record(engine, job.job_id, status="running")
 
-        with tempfile.NamedTemporaryFile(suffix=".apk", delete=False) as tmp:
-            tmp.write(apk_bytes)
-            tmp_path = tmp.name
+            loop = asyncio.get_running_loop()
+            analysis = await asyncio.to_thread(analyze_apk, tmp_path)
 
-        loop = asyncio.get_running_loop()
-        analysis = await loop.run_in_executor(None, analyze_apk, tmp_path)
+            if not analysis.get("has_classes_dex"):
+                raise ValueError("APK does not contain classes.dex")
 
-        if not analysis.get("has_classes_dex"):
-            raise ValueError("APK does not contain classes.dex")
+            def _on_progress(step: str, pct: int) -> None:
+                # Apply state changes and notify every subscriber on the event loop.
+                job.push_threadsafe(loop, {"status": "running", "step": step, "pct": pct})
+                update_job_record(engine, job.job_id, status="running", step=step, pct=pct)
 
-        def _on_progress(step: str, pct: int) -> None:
-            # Apply state changes and notify every subscriber on the event loop.
-            job.push_threadsafe(loop, {"status": "running", "step": step, "pct": pct})
-            update_job_record(engine, job.job_id, status="running", step=step, pct=pct)
+            packed = await asyncio.to_thread(
+                run_pipeline, tmp_path, progress=_on_progress, options=options
+            )
 
-        options = PackOptions(
-            encrypt_native=encrypt_native,
-            encrypt_assets=encrypt_assets,
-            encrypt_strings=encrypt_strings,
-            root_detection=root_detection,
-            emulator_detection=emulator_detection,
-            exclude_files=exclude_files,
-        )
-
-        packed = await loop.run_in_executor(
-            None,
-            lambda: run_pipeline(
-                tmp_path,
-                app_class=app_class or None,
-                progress=_on_progress,
-                options=options,
-            ),
-        )
-
-        webhook_urls = webhook_service.parse_urls(webhook_url, get_server_settings().webhook_url)
-        entry = await loop.run_in_executor(
-            None,
-            lambda: _save_app(
+            webhook_urls = webhook_service.parse_urls(
+                webhook_url, get_server_settings().webhook_url
+            )
+            entry = await asyncio.to_thread(
+                _save_app,
                 engine,
                 analysis=analysis,
                 apk_sig=packed.sha256,
                 packed_path=packed.path,
                 webhook_urls=webhook_urls,
-            ),
-        )
+            )
 
-        result: dict[str, Any] = PackedApp(
-            app_id=entry.app_id,
-            package_name=entry.package_name,
-            apk_signature=packed.sha256,
-            analysis=analysis,
-            report=packed.report,
-        ).model_dump()
+            result: dict[str, Any] = PackedApp(
+                app_id=entry.app_id,
+                package_name=entry.package_name,
+                apk_signature=packed.sha256,
+                analysis=analysis,
+                report=packed.report,
+            ).model_dump()
 
-        job.push({"status": JobStatus.done, "step": "done", "pct": 100, "result": result})
-        update_job_record(
-            engine, job.job_id, status="done", step="done", pct=100, app_id=entry.app_id
-        )
-        log.info("packed app_id=%s package=%s", entry.app_id, entry.package_name)
+            job.push({"status": JobStatus.done, "step": "done", "pct": 100, "result": result})
+            update_job_record(
+                engine, job.job_id, status="done", step="done", pct=100, app_id=entry.app_id
+            )
+            log.info("packed app_id=%s package=%s", entry.app_id, entry.package_name)
 
-        webhook_service.fire(webhook_urls, {"event": "pack.done", "result": result})
+            webhook_service.fire(webhook_urls, {"event": "pack.done", "result": result})
 
     except Exception as exc:
         log.exception("pack job %s failed", job.job_id)
         message = _client_safe_error(exc)
         job.push({"status": JobStatus.error, "step": "error", "pct": 0, "error": message})
         update_job_record(engine, job.job_id, status="error", step="error", pct=0, error=message)
-    finally:
-        if tmp_path:
-            await asyncio.to_thread(_remove_quietly, tmp_path)
-
-
-def _remove_quietly(path: str) -> None:
-    with contextlib.suppress(FileNotFoundError):
-        os.unlink(path)
 
 
 def _client_safe_error(exc: Exception) -> str:

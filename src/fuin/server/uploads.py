@@ -1,4 +1,4 @@
-"""Upload validation shared by the /analyze and /pack routes."""
+"""HTTP upload validation shared by the /analyze and /pack routes."""
 
 import logging
 

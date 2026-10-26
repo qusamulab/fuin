@@ -26,7 +26,7 @@ bar against runtime instrumentation tools like Frida and Xposed.
 Works with Unity, Flutter and standard Android apps. No source changes. No network at
 runtime. Fully offline.
 
-![fuin demo](docs/demo.gif)
+![Recorded Web UI workflow: upload, select encryption targets, pack, download and upload mappings](docs/demo.gif)
 
 ## Quick start
 
