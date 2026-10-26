@@ -1,6 +1,7 @@
 """Job status: SSE stream and polling fallback."""
 
 import json
+from contextlib import aclosing
 
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
@@ -19,10 +20,15 @@ async def stream_job(job_id: str):
         raise HTTPException(status_code=404, detail="Job not found")
 
     async def _sse():
-        async for event in job.stream():
-            yield f"data: {json.dumps(event)}\n\n"
+        async with aclosing(job.stream()) as stream:
+            async for event in stream:
+                yield f"data: {json.dumps(event)}\n\n"
 
-    return StreamingResponse(_sse(), media_type="text/event-stream")
+    return StreamingResponse(
+        _sse(),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
+    )
 
 
 @router.get("/{job_id}", response_model=JobStatus)

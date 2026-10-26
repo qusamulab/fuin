@@ -1,3 +1,4 @@
+import json
 import os
 import time
 
@@ -146,6 +147,15 @@ def test_pack_job_runs_to_completion_and_persists_the_app(client):
     assert download.status_code == 200
     assert download.content.startswith(b"PK\x03\x04")
 
+    stream = client.get(f"/jobs/{job_id}/stream", headers={"X-API-Key": API_KEY})
+    assert stream.status_code == 200
+    assert stream.headers["cache-control"] == "no-cache"
+    assert stream.headers["x-accel-buffering"] == "no"
+    events = [json.loads(line.removeprefix("data: ")) for line in stream.text.splitlines() if line]
+    assert events == [{"status": "done", "step": "done", "pct": 100, "result": status["result"]}]
+    assert status["step"] == "done"
+    assert status["pct"] == 100
+
 
 def test_pack_job_records_an_error_for_an_apk_without_dex(client):
     resp = client.post(
@@ -198,6 +208,64 @@ def test_jobs_stranded_by_a_restart_are_failed_at_startup(client):
     resp = client.get("/jobs/orphan-job", headers={"X-API-Key": API_KEY})
     assert resp.status_code == 200
     assert resp.json()["status"] == "error"
+
+
+@pytest.mark.parametrize("auth", [False, True])
+def test_job_stream_requires_auth_and_known_job(client, auth):
+    headers = {"X-API-Key": API_KEY} if auth else {}
+
+    response = client.get("/jobs/unknown/stream", headers=headers)
+
+    assert response.status_code == (404 if auth else 401)
+
+
+def test_pack_failure_resets_progress_in_memory_and_database(client, monkeypatch):
+    import fuin.server.services.pack_service as pack_service
+
+    def fail_pipeline(*args, progress, **kwargs):
+        progress("signing", 85)
+        raise ValueError("Signing failed")
+
+    monkeypatch.setattr(pack_service, "run_pipeline", fail_pipeline)
+    response = client.post(
+        "/pack",
+        files={"file": ("test.apk", make_minimal_apk(), "application/octet-stream")},
+        headers={"X-API-Key": API_KEY},
+    )
+    job_id = response.json()["job_id"]
+    status = _await_terminal(client, job_id)
+    assert status["status"] == "error"
+    assert status["step"] == "error"
+    assert status["pct"] == 0
+    assert status["error"] == "Signing failed"
+
+    jobs.reset_jobs()
+    persisted = client.get(f"/jobs/{job_id}", headers={"X-API-Key": API_KEY}).json()
+    assert persisted == status
+
+
+def test_analyze_form_options_match_cli_selection(client):
+    apk_bytes = make_minimal_apk(
+        extra_files={
+            "lib/arm64-v8a/libtest.so": b"library",
+            "assets/keep.json": b"keep",
+            "assets/encrypt.json": b"encrypt",
+        }
+    )
+
+    response = client.post(
+        "/analyze",
+        files={"file": ("test.apk", apk_bytes, "application/octet-stream")},
+        data={"encrypt_native": "false", "exclude_files": " assets/keep.json, ,"},
+        headers={"X-API-Key": API_KEY},
+    )
+
+    assert response.status_code == 200
+    result = response.json()
+    assert result["native_libs"] == {"files": [], "total_size": 0}
+    assert [entry["name"] for entry in result["assets"]["files"]] == ["assets/encrypt.json"]
+    assert result["summary"]["total_files"] == 2
+    assert 0 <= result["summary"]["coverage_percent"] <= 100
 
 
 def _apk_without_dex() -> bytes:

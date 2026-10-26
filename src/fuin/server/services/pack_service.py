@@ -89,7 +89,7 @@ async def run_pack_job(
     """Run the pack pipeline asynchronously and persist results."""
     tmp_path: str | None = None
     try:
-        job.status = JobStatus.running
+        job.push({"status": JobStatus.running})
         update_job_record(engine, job.job_id, status="running")
 
         with tempfile.NamedTemporaryFile(suffix=".apk", delete=False) as tmp:
@@ -103,10 +103,7 @@ async def run_pack_job(
             raise ValueError("APK does not contain classes.dex")
 
         def _on_progress(step: str, pct: int) -> None:
-            # Called from the executor thread, so the queue write has to be
-            # marshalled back onto the loop.
-            job.progress_step = step
-            job.progress_pct = pct
+            # Apply state changes and notify every subscriber on the event loop.
             job.push_threadsafe(loop, {"status": "running", "step": step, "pct": pct})
             update_job_record(engine, job.job_id, status="running", step=step, pct=pct)
 
@@ -149,8 +146,6 @@ async def run_pack_job(
             report=packed.report,
         ).model_dump()
 
-        job.result = result
-        job.status = JobStatus.done
         job.push({"status": JobStatus.done, "step": "done", "pct": 100, "result": result})
         update_job_record(
             engine, job.job_id, status="done", step="done", pct=100, app_id=entry.app_id
@@ -162,10 +157,8 @@ async def run_pack_job(
     except Exception as exc:
         log.exception("pack job %s failed", job.job_id)
         message = _client_safe_error(exc)
-        job.status = JobStatus.error
-        job.error = message
         job.push({"status": JobStatus.error, "step": "error", "pct": 0, "error": message})
-        update_job_record(engine, job.job_id, status="error", error=message)
+        update_job_record(engine, job.job_id, status="error", step="error", pct=0, error=message)
     finally:
         if tmp_path:
             await asyncio.to_thread(_remove_quietly, tmp_path)

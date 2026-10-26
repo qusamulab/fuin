@@ -71,11 +71,14 @@ tests/
 │   ├── axml.py          # hand-rolled binary AXML
 │   └── apk.py           # minimal APK (ZIP)
 ├── conftest.py          # fixtures only
+├── test_analysis.py     # selection and uncompressed coverage
+├── test_cli.py          # CLI preview versus actual packed entries
 ├── test_apk.py          # injection + alignment, including the pure-Python aligner
 ├── test_axml_malformed.py  # untrusted-manifest handling
 ├── test_crypto.py
 ├── test_manifest.py
 ├── test_pipeline.py     # end-to-end pack
+├── test_jobs.py         # concurrent SSE subscribers, reconnect and disconnect
 ├── test_server.py       # FastAPI endpoints, including a job run to completion
 ├── test_signing.py      # v1/v2 signing, cert fingerprint
 ├── test_string_encrypt.py

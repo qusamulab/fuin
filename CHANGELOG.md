@@ -11,8 +11,24 @@ Correctness release. Several protections were not doing anything, and nothing
 in the suite noticed because the assertions checked shape rather than outcome.
 No configuration changes are required.
 
+### Added
+
+- `fuin-pack pack` and `analyze` accept repeatable `--exclude ENTRY` flags for
+  native libraries and user assets. Analysis also supports `--no-native-encrypt`
+  and `--no-resource-encrypt`, so previews use the same selection as packing.
+- `POST /analyze` accepts `encrypt_native`, `encrypt_assets` and `exclude_files`
+  with the same selection rules as `POST /pack`.
+
 ### Fixed
 
+- Protection coverage uses uncompressed APK content as its denominator, keeping
+  it between 0 and 100% for compressed archives. Analysis adds
+  `summary.content_size` while retaining the on-disk `summary.apk_size`.
+- Progress streams broadcast independently to multiple subscribers and start
+  with current state on connection or reconnection. Per-subscriber queues are
+  bounded and released on disconnect; completion is retained for slow clients.
+- Job state and progress events are updated together on the event loop. Failed
+  jobs now report the same terminal step and percentage in memory and in the DB.
 - **The pure-Python `zipalign` never worked.** Its local-file-header format
   string unpacked 11 fields into 10 names, so it raised `ValueError` on the
   first entry of every input. Nobody hit it because the tests ran the Android

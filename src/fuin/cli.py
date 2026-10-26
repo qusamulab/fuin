@@ -10,6 +10,7 @@ import logging
 
 from fuin.packer import PackOptions, pack_apk
 from fuin.reporting import fmt_size, format_report, generate_report
+from fuin.reporting.analyze import TargetAnalysis
 
 log = logging.getLogger(__name__)
 
@@ -19,6 +20,7 @@ def _pack(args: argparse.Namespace) -> None:
         app_class=args.app_class or None,
         encrypt_native=not args.no_native_encrypt,
         encrypt_assets=not args.no_resource_encrypt,
+        exclude_files=tuple(args.exclude_files),
         encrypt_strings=args.encrypt_strings,
         root_detection=args.root_detection,
         emulator_detection=args.emulator_detection,
@@ -42,14 +44,19 @@ def _pack(args: argparse.Namespace) -> None:
 def _analyze(args: argparse.Namespace) -> None:
     from fuin.reporting import analyze_targets
 
-    result = analyze_targets(args.input)
+    result = analyze_targets(
+        args.input,
+        encrypt_native=not args.no_native_encrypt,
+        encrypt_assets=not args.no_resource_encrypt,
+        exclude_files=args.exclude_files,
+    )
     if args.json:
         print(json.dumps(result, indent=2))
         return
     _print_analysis(result)
 
 
-def _print_analysis(result: dict) -> None:
+def _print_analysis(result: TargetAnalysis) -> None:
     print("=== Fuin Encryption Analysis ===")
     print()
 
@@ -61,7 +68,7 @@ def _print_analysis(result: dict) -> None:
     for label, section in sections:
         files = section["files"]
         if not files and label != "DEX files":
-            print(f"{label}: none found")
+            print(f"{label}: none selected")
             print()
             continue
         print(f"{label} ({len(files)} total, {fmt_size(section['total_size'])}):")
@@ -74,7 +81,24 @@ def _print_analysis(result: dict) -> None:
     print(f"  Total encryptable files: {summary['total_files']}")
     print(f"  Total encryptable size:  {fmt_size(summary['total_size'])}")
     print(f"  APK total size:          {fmt_size(summary['apk_size'])}")
-    print(f"  Protection coverage:     {summary['coverage_percent']:.1f}% of APK content")
+    print(f"  Uncompressed content:    {fmt_size(summary['content_size'])}")
+    print(f"  Protection coverage:     {summary['coverage_percent']:.1f}% of uncompressed content")
+
+
+def _add_target_options(parser: argparse.ArgumentParser) -> None:
+    """Keep pack and analyze selection flags identical."""
+    parser.add_argument("--no-native-encrypt", action="store_true", help="Disable .so encryption")
+    parser.add_argument(
+        "--no-resource-encrypt", action="store_true", help="Disable asset encryption"
+    )
+    parser.add_argument(
+        "--exclude",
+        dest="exclude_files",
+        action="append",
+        default=[],
+        metavar="ENTRY",
+        help="Leave this exact native library or asset entry unencrypted (repeatable)",
+    )
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -103,10 +127,7 @@ def build_parser() -> argparse.ArgumentParser:
     pack_p.add_argument(
         "--emulator-detection", action="store_true", default=None, help="Enable emulator detection"
     )
-    pack_p.add_argument("--no-native-encrypt", action="store_true", help="Disable .so encryption")
-    pack_p.add_argument(
-        "--no-resource-encrypt", action="store_true", help="Disable asset encryption"
-    )
+    _add_target_options(pack_p)
     pack_p.add_argument(
         "--encrypt-strings",
         action="store_true",
@@ -130,6 +151,7 @@ def build_parser() -> argparse.ArgumentParser:
     analyze_p = sub.add_parser("analyze", help="Preview what will be encrypted in an APK")
     analyze_p.add_argument("input", help="Input APK path")
     analyze_p.add_argument("--json", action="store_true", help="Output as JSON")
+    _add_target_options(analyze_p)
 
     return parser
 

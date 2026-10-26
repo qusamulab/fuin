@@ -4,7 +4,7 @@
 
 ```bash
 fuin-pack pack <input.apk> <output.apk> [options]
-fuin-pack analyze <input.apk> [--json]
+fuin-pack analyze <input.apk> [--json] [options]
 ```
 
 ---
@@ -27,6 +27,7 @@ fuin-pack pack MyApp.apk MyApp-protected.apk --report
 | `--encrypt-strings` | XOR-obfuscate DEX string constants |
 | `--no-native-encrypt` | Do **not** encrypt native `.so` libraries |
 | `--no-resource-encrypt` | Do **not** encrypt user assets |
+| `--exclude ENTRY` | Leave an exact native library or asset entry unencrypted; repeat for multiple entries |
 | `--no-strict-manifest-patch` | Pack anyway when `StubApplication` cannot be verified as inserted |
 | `--verify-signature` | Run `apksigner verify` after signing |
 | `--keystore` | Signing keystore path (PKCS12) |
@@ -100,7 +101,8 @@ Native libraries (3 total, 18.1 MB):
   Total encryptable files: 12
   Total encryptable size:  24.6 MB
   APK total size:          31.0 MB
-  Protection coverage:     79.4% of APK content
+  Uncompressed content:    40.0 MB
+  Protection coverage:     61.5% of uncompressed content
 ```
 
 `--json` emits the same data as JSON for scripting:
@@ -108,6 +110,23 @@ Native libraries (3 total, 18.1 MB):
 ```bash
 fuin-pack analyze MyApp.apk --json | jq '.summary.coverage_percent'
 ```
+
+Preview and pack with the same selection flags:
+
+```bash
+fuin-pack analyze MyApp.apk --no-native-encrypt --exclude assets/config.json
+fuin-pack pack MyApp.apk MyApp-protected.apk --no-native-encrypt --exclude assets/config.json
+```
+
+Both commands accept `--no-native-encrypt`, `--no-resource-encrypt` and repeatable
+`--exclude ENTRY`. Exclusions match exact ZIP entry names, including their directory
+prefix, rather than glob patterns. DEX files are always encrypted, even if listed in
+`--exclude`.
+
+Coverage is selected uncompressed bytes divided by all uncompressed file bytes in
+the APK. JSON exposes the denominator as `summary.content_size`; `summary.apk_size`
+remains the archive's size on disk. This keeps coverage between 0 and 100% even for
+highly compressed APKs.
 
 ---
 
