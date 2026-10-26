@@ -34,7 +34,7 @@ Packing runs in the background; the response returns immediately.
 | `file` | file | — | The `.apk` to pack (required) |
 | `app_class` | string | auto-detect | Original `Application` class |
 | `webhook_url` | string | — | Comma-separated URLs to POST to on completion |
-| `exclude_files` | string | — | Comma-separated entry names to leave unencrypted |
+| `exclude_files` | string | — | Comma-separated exact native library or asset entry names to leave unencrypted; DEX is always encrypted |
 | `encrypt_native` | bool | `true` | Encrypt `.so` libraries |
 | `encrypt_assets` | bool | `true` | Encrypt user assets |
 | `encrypt_strings` | bool | env | XOR-obfuscate DEX strings |
@@ -61,14 +61,14 @@ curl -N "http://localhost:8000/jobs/$JOB/stream?api_key=$FUIN_API_KEY"
 {"status": "error",   "step": "error", "pct": 0,   "error": "APK does not contain classes.dex"}
 ```
 
-The stream closes after a `done` or `error` event.
+Each connection receives the current job state immediately, then subsequent
+updates. Multiple clients can watch the same job independently. Reconnecting to a
+completed job replays its terminal state, including the result or error, and closes
+the stream. The stream also closes after a live `done` or `error` event.
 
-!!! warning "One consumer per stream"
-
-    Events are consumed from a queue, so two clients watching the same job split the
-    events between them rather than each seeing all. A client that connects *after*
-    the job finished will not receive the terminal event either — poll
-    `GET /jobs/{id}` instead.
+Each subscriber buffers at most 32 updates. A slow connection may skip intermediate
+progress events; the latest state and terminal event are retained. Disconnected
+subscribers are removed. The response disables caching and Nginx response buffering.
 
 ## Poll status
 
@@ -152,6 +152,21 @@ curl -sX POST http://localhost:8000/analyze \
 ```
 
 Same data as [`fuin-pack analyze`](cli.md#analyze). Nothing is stored.
+
+The optional form fields `encrypt_native`, `encrypt_assets` and `exclude_files`
+have the same defaults and selection rules as `POST /pack`:
+
+```bash
+curl -sX POST http://localhost:8000/analyze \
+  -H "X-API-Key: $FUIN_API_KEY" \
+  -F "file=@MyApp.apk" \
+  -F "encrypt_native=false" \
+  -F "exclude_files=assets/config.json,assets/public.txt" | jq .summary
+```
+
+`summary.coverage_percent` measures selected bytes against the total uncompressed
+APK content (`summary.content_size`). `summary.apk_size` reports the archive size
+on disk.
 
 ---
 

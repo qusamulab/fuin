@@ -67,6 +67,24 @@ Returned by `POST /pack`.
 { "job_id": "9f0c1d3e-4a2b-..." }
 ```
 
+### Target analysis
+
+Returned by `POST /analyze`. Accepts `file`, `encrypt_native`, `encrypt_assets` and
+`exclude_files` as multipart form fields; the selection fields follow the
+[`POST /pack` rules](../guide/rest-api.md#form-fields).
+
+`dex`, `native_libs` and `assets` each contain a `files` array of `{name, size}`
+objects and `total_size`, measured in uncompressed bytes. Disabled or fully excluded
+categories have an empty array and a size of zero. DEX files are always selected.
+
+| Summary field | Type | Description |
+|---|---|---|
+| `total_files` | int | Selected file count |
+| `total_size` | int | Selected uncompressed bytes |
+| `apk_size` | int | Archive size on disk |
+| `content_size` | int | Uncompressed bytes of all file entries, excluding directories |
+| `coverage_percent` | float | `total_size / content_size * 100`, rounded to one decimal; zero for empty content |
+
 ### `JobStatus`
 
 Returned by `GET /jobs/{job_id}`.

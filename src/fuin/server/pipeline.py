@@ -18,6 +18,7 @@ from fuin.contract import PRIMARY_DEX
 from fuin.packer import PackOptions, PackResult, pack_apk
 from fuin.reporting import analyze_targets as _analyze_targets
 from fuin.reporting import generate_report
+from fuin.reporting.analyze import TargetAnalysis
 from fuin.server.config import get_server_settings
 
 log = logging.getLogger(__name__)
@@ -50,9 +51,15 @@ def analyze_apk(apk_path: str) -> dict:
     return info
 
 
-def analyze_targets(apk_path: str) -> dict:
+def analyze_targets(apk_path: str, options: PackOptions | None = None) -> TargetAnalysis:
     """Preview what packing would encrypt."""
-    return _analyze_targets(apk_path)
+    options = options or PackOptions()
+    return _analyze_targets(
+        apk_path,
+        encrypt_native=options.encrypt_native,
+        encrypt_assets=options.encrypt_assets,
+        exclude_files=options.exclude_files,
+    )
 
 
 def run_pipeline(

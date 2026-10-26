@@ -1,7 +1,7 @@
 """
 In-memory job store for async pack jobs.
 
-Jobs are keyed by job_id (UUID). Consumers poll via asyncio.Queue per job.
+Jobs are keyed by job_id (UUID). Each SSE subscriber has its own bounded queue.
 
 The store is process-local and bounded: it keeps at most :data:`MAX_JOBS`
 entries, evicting the oldest finished jobs first. Terminal state also lives in
@@ -12,11 +12,13 @@ status remains available via the DB fallback.
 import asyncio
 import uuid
 from collections import OrderedDict
+from collections.abc import AsyncIterator
 from dataclasses import dataclass, field
 from enum import StrEnum
 from typing import Any
 
 MAX_JOBS = 512
+MAX_PENDING_EVENTS = 32
 
 
 class JobStatus(StrEnum):
@@ -34,14 +36,30 @@ class Job:
     progress_pct: int = 0
     result: dict[str, Any] | None = None
     error: str | None = None
-    # SSE subscribers receive events from this queue
-    _queue: asyncio.Queue = field(default_factory=asyncio.Queue, repr=False)
+    _subscribers: set[asyncio.Queue[dict[str, Any]]] = field(
+        default_factory=set, init=False, repr=False, compare=False
+    )
 
-    def push(self, event: dict) -> None:
-        """Queue an event. Only safe to call from the event loop's own thread."""
-        self._queue.put_nowait(event)
+    def push(self, event: dict[str, Any]) -> None:
+        """Update state and broadcast it on the event loop's own thread.
 
-    def push_threadsafe(self, loop: asyncio.AbstractEventLoop, event: dict) -> None:
+        Slow subscribers may skip intermediate snapshots, but always receive
+        the latest state, including completion. With no subscribers there is
+        nothing to buffer; a later connection starts from ``snapshot()``.
+        """
+        if "status" in event:
+            self.status = JobStatus(event["status"])
+        self.progress_step = event.get("step", self.progress_step)
+        self.progress_pct = event.get("pct", self.progress_pct)
+        self.result = event.get("result", self.result)
+        self.error = event.get("error", self.error)
+        snapshot = self.snapshot()
+        for queue in self._subscribers:
+            if queue.full():
+                queue.get_nowait()
+            queue.put_nowait(snapshot)
+
+    def push_threadsafe(self, loop: asyncio.AbstractEventLoop, event: dict[str, Any]) -> None:
         """Queue an event from a worker thread.
 
         ``asyncio.Queue`` is not thread-safe: ``put_nowait`` resolves waiter
@@ -51,21 +69,20 @@ class Job:
         """
         loop.call_soon_threadsafe(self.push, event)
 
-    async def stream(self):
-        """Async generator that yields events until the job finishes.
-
-        A subscriber that arrives after the job ended would otherwise wait on a
-        queue nothing will ever fill, so terminal state is replayed first.
-        """
-        if self.status in (JobStatus.done, JobStatus.error):
-            yield self.snapshot()
-            return
-
-        while True:
-            event = await self._queue.get()
-            yield event
-            if event.get("status") in (JobStatus.done, JobStatus.error):
-                break
+    async def stream(self) -> AsyncIterator[dict[str, Any]]:
+        """Yield current state, then updates until completion or disconnect."""
+        queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=MAX_PENDING_EVENTS)
+        # Register before yielding so an update during the first yield is not lost.
+        self._subscribers.add(queue)
+        try:
+            event = self.snapshot()
+            while True:
+                yield event
+                if event.get("status") in (JobStatus.done, JobStatus.error):
+                    break
+                event = await queue.get()
+        finally:
+            self._subscribers.discard(queue)
 
     def snapshot(self) -> dict[str, Any]:
         """The job's current state as an SSE event."""

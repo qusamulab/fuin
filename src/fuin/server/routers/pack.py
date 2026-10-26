@@ -17,8 +17,17 @@ from fuin.server.services.pack_service import run_pack_job
 router = APIRouter(dependencies=[Depends(verify_api_key)])
 
 
+def _parse_exclusions(value: str) -> tuple[str, ...]:
+    return tuple(name.strip() for name in value.split(",") if name.strip())
+
+
 @router.post("/analyze")
-async def analyze_apk_targets(file: UploadFile = File(...)):
+async def analyze_apk_targets(
+    file: UploadFile = File(...),
+    exclude_files: str = Form(default=""),
+    encrypt_native: bool = Form(default=True),
+    encrypt_assets: bool = Form(default=True),
+):
     apk_bytes = await read_apk_upload(file)
 
     with tempfile.NamedTemporaryFile(suffix=".apk", delete=False) as tmp:
@@ -26,8 +35,12 @@ async def analyze_apk_targets(file: UploadFile = File(...)):
         tmp_path = tmp.name
 
     try:
-        loop = asyncio.get_event_loop()
-        return await loop.run_in_executor(None, pipeline.analyze_targets, tmp_path)
+        options = pipeline.PackOptions(
+            encrypt_native=encrypt_native,
+            encrypt_assets=encrypt_assets,
+            exclude_files=_parse_exclusions(exclude_files),
+        )
+        return await asyncio.to_thread(pipeline.analyze_targets, tmp_path, options)
     finally:
         os.unlink(tmp_path)
 
@@ -64,7 +77,7 @@ async def pack_apk(
             encrypt_strings=encrypt_strings,
             root_detection=root_detection,
             emulator_detection=emulator_detection,
-            exclude_files=tuple(f.strip() for f in exclude_files.split(",") if f.strip()),
+            exclude_files=_parse_exclusions(exclude_files),
         )
     )
     return JobAccepted(job_id=job.job_id)
