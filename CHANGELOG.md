@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-Correctness release. Several protections were not doing anything, and nothing
-in the suite noticed because the assertions checked shape rather than outcome.
-No configuration changes are required.
+## [2.1.0] - 2026-10-26
+
+Consistent APK selection and progress reporting, signing and alignment fixes,
+server security improvements, and a modular Web UI with a new demo recording.
 
 ### Added
 
@@ -18,6 +19,17 @@ No configuration changes are required.
   and `--no-resource-encrypt`, so previews use the same selection as packing.
 - `POST /analyze` accepts `encrypt_native`, `encrypt_assets` and `exclude_files`
   with the same selection rules as `POST /pack`.
+- `GET /health` — unauthenticated liveness probe, plus a Docker `HEALTHCHECK`.
+- 16 KiB page alignment for uncompressed `lib/**/*.so`, for Android 15 devices.
+  Opt in via `zipalign(..., so_alignment=PAGE_ALIGNMENT)`.
+- Jobs left `running` by a restart are marked failed at startup instead of
+  being reported as in progress forever.
+- SQLite connections enable WAL, a busy timeout and foreign keys;
+  `FUIN_DATABASE_URL` now works for non-SQLite backends.
+- An SSE subscriber that connects after a job finished receives the terminal
+  state instead of blocking forever, and progress events are marshalled onto
+  the event loop rather than pushed onto an `asyncio.Queue` from a worker
+  thread.
 
 ### Fixed
 
@@ -105,22 +117,15 @@ No configuration changes are required.
 - External build tools run with a timeout, so a wedged `apksigner` cannot pin a
   worker forever.
 
-### Added
-
-- `GET /health` — unauthenticated liveness probe, plus a Docker `HEALTHCHECK`.
-- 16 KiB page alignment for uncompressed `lib/**/*.so`, for Android 15 devices.
-  Opt in via `zipalign(..., so_alignment=PAGE_ALIGNMENT)`.
-- Jobs left `running` by a restart are marked failed at startup instead of
-  being reported as in progress forever.
-- SQLite connections enable WAL, a busy timeout and foreign keys;
-  `FUIN_DATABASE_URL` now works for non-SQLite backends.
-- An SSE subscriber that connects after a job finished receives the terminal
-  state instead of blocking forever, and progress events are marshalled onto
-  the event loop rather than pushed onto an `asyncio.Queue` from a worker
-  thread.
-
 ### Changed
 
+- Split the Web UI into native JavaScript modules and a shared stylesheet,
+  replacing inline event handlers with event listeners.
+- Pack routes pass immutable `PackOptions` to background jobs; shared temporary
+  APK handling and progress callbacks reduce duplicated server code.
+- Replace the documentation demo GIF with a recording of the current Web UI,
+  and add a reproducible GIF builder. The logo is unchanged.
+- Update Python dependencies, Kotlin, and GitHub Actions dependencies.
 - `inject_encrypted_dex` takes an `InjectedAssets` dataclass instead of
   fourteen keyword arguments.
 - `encrypt_native_libs` / `encrypt_resources` return `EncryptedEntries` instead
@@ -244,6 +249,8 @@ See the [release notes](https://github.com/qusamulab/fuin/releases/tag/v1.1.0).
 
 Initial release.
 
+[Unreleased]: https://github.com/qusamulab/fuin/compare/v2.1.0...HEAD
+[2.1.0]: https://github.com/qusamulab/fuin/compare/v2.0.0...v2.1.0
 [2.0.0]: https://github.com/qusamulab/fuin/compare/v1.1.2...v2.0.0
 [1.1.2]: https://github.com/qusamulab/fuin/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/qusamulab/fuin/compare/v1.1.0...v1.1.1
