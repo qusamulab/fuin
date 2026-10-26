@@ -37,7 +37,9 @@ No source changes. No network at runtime. Works fully offline.
 
 ## Demo
 
-![fuin demo](demo.gif)
+![Recorded Web UI workflow: upload, select encryption targets, pack, download and upload mappings](demo.gif)
+
+Recorded with a generated sample APK in the bundled Web UI.
 
 ---
 

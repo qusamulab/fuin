@@ -61,6 +61,49 @@ importing `apk` from `axml`, the code probably belongs on the other side of that
 `pip install fuin` can pack without an Android SDK — see
 [Architecture](../reference/architecture.md#repository-layout).
 
+### Web UI
+
+The web UI lives in `src/fuin/server/static/`. Keep page structure in `index.html`,
+styles in `styles.css`, and browser code in `js/`. `app.js` initializes the page;
+`analysis.js`, `pack.js`, `progress.js` and `apps.js` own their respective features.
+`api.js` handles the API key and authenticated requests; `ui.js` shares formatting
+and metadata markup. Use DOM event listeners for both static and rendered buttons
+so feature functions can stay scoped to their modules.
+
+The server serves native ES modules directly. There is no frontend build step or
+JavaScript dependency install. After changing the UI, check the browser flow from
+APK selection through packing, and verify that wheel builds include the stylesheet
+and every imported module. The server tests traverse the page's asset imports and
+check that they are served with the correct content types.
+
+### Refreshing the demo recording
+
+`docs/demo.gif` is a recording of actual browser interactions, shared by the
+README, documentation home page and Web UI guide. Keep the logo unchanged when
+refreshing the demo. Use a generated sample APK and an isolated server database,
+then record upload, target selection, packing, download and mapping upload.
+
+Capture consecutive PNG frames during the interaction. Save their timestamps in
+`frames.json` alongside them:
+
+```json
+[
+  {"file": "frame-00000.png", "elapsed_ms": 0},
+  {"file": "frame-00001.png", "elapsed_ms": 125}
+]
+```
+
+Encode the recording while preserving its timing:
+
+```bash
+uv run scripts/build_demo.py /path/to/recording
+```
+
+The script declares Pillow as an isolated script dependency, so it does not add an
+image library to the packer's runtime dependencies. Check the generated GIF for
+readable text, complete playback and accidental exposure of credentials before
+committing it. Raw recording frames are temporary files and do not need committing.
+
 ---
 
 ## Tests
