@@ -2,7 +2,7 @@
 name = "fuin"
 version = "2.1.0"
 description = "Android DEX Packer — web-based APK packing for static analysis resistance"
-requires-python = ">=3.12"
+requires-python = ">=3.15"
 readme = "README.md"
 license = "MIT"
 license-files = ["LICENSE"]
@@ -44,11 +44,11 @@ build-backend = "hatchling.build"
 [dependency-groups]
 dev = [
     "pre-commit>=4.6.2",
-    "ruff>=0.15.15",
+    "ruff>=0.17.5",
     "pytest>=9.1.1",
     "pytest-asyncio>=1.4.0",
     "pytest-cov>=7.0.0",
-    "mypy>=1.18.2",
+    "mypy>=2.4.1",
     # Pinned below 2.0: MkDocs 2.0 removes the plugin system outright.
     "mkdocs-material>=9.6.0,<10",
     "mkdocs<2",
@@ -71,7 +71,7 @@ branch = true
 exclude_also = ["if TYPE_CHECKING:", "raise NotImplementedError"]
 
 [tool.mypy]
-python_version = "3.12"
+python_version = "3.15"
 files = ["src/fuin"]
 # The codebase is annotated but was never type-checked, so this starts at a
 # level that passes today. Tighten as the untyped edges get annotated.
@@ -82,7 +82,7 @@ no_implicit_optional = true
 
 [tool.ruff]
 line-length = 100
-target-version = "py312"
+target-version = "py315"
 
 [tool.ruff.lint]
 # B (bugbear) and S (bandit) matter for a security tool; SIM/C4/RUF/PT are

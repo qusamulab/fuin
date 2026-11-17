@@ -90,7 +90,7 @@ def create_debug_keystore(keystore_path: str) -> Keystore:
     return Keystore(keystore_path, DEBUG_ALIAS, DEBUG_PASSWORD, DEBUG_PASSWORD)
 
 
-def resolve(options: "PackOptions", settings: "Settings", tmpdir: str) -> Keystore:
+def resolve(options: PackOptions, settings: Settings, tmpdir: str) -> Keystore:
     """Pick the keystore to sign with, falling back to a debug keystore.
 
     Explicit options win over configured settings; if either the path or a

@@ -189,7 +189,7 @@ def read_string_pool(data: bytes, sp_offset: int) -> StringPool | None:
         try:
             rel = read_u32(data, offsets_start + i * 4)
             strings.append(decode_pool_string(data, strings_abs, rel, is_utf8))
-        except (struct.error, IndexError, UnicodeDecodeError):
+        except struct.error, IndexError, UnicodeDecodeError:
             # A single malformed entry must not lose the rest of the pool;
             # indices have to stay aligned, so append a placeholder.
             strings.append("")

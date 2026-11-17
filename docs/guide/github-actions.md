@@ -32,7 +32,7 @@ fuin ships a composite action, so a release workflow can pack the APK it just bu
 | `encrypt-strings` | no | `false` | XOR-obfuscate DEX strings |
 | `no-native-encrypt` | no | `false` | Skip `.so` encryption |
 | `no-resource-encrypt` | no | `false` | Skip asset encryption |
-| `python-version` | no | `3.12` | Python to set up |
+| `python-version` | no | `3.15` | Python to set up (3.15 or newer) |
 
 ## Outputs
 

@@ -39,7 +39,7 @@ def reset_engine() -> None:
     _engine = None
 
 
-def get_db() -> Generator[Session, None, None]:
+def get_db() -> Generator[Session]:
     with Session(get_engine()) as session:
         yield session
 

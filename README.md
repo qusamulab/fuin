@@ -5,7 +5,7 @@
 **Android APK Packer — protect bytecode, block cheating, resist reverse engineering**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python](https://img.shields.io/badge/Python-3.12%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
+[![Python](https://img.shields.io/badge/Python-3.15%2B-blue?logo=python&logoColor=white)](https://www.python.org/)
 [![Docker](https://img.shields.io/badge/Docker-ready-2496ED?logo=docker&logoColor=white)](https://hub.docker.com/)
 [![CI](https://github.com/qusamulab/fuin/actions/workflows/ci.yml/badge.svg)](https://github.com/qusamulab/fuin/actions/workflows/ci.yml)
 
