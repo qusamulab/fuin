@@ -10,6 +10,8 @@ uv run pre-commit install
 
 `uv sync` alone installs the packer only. Use `--all-extras`.
 
+Python 3.15 is required. The committed `.python-version` selects it for `uv`.
+
 See **[Installation](../getting-started/installation.md#local-development-setup)** for
 the Android build-tools and JDK setup, both optional.
 
@@ -226,7 +228,7 @@ its references.
 | Job | Purpose |
 |---|---|
 | Lint & format | ruff check, ruff format, mypy |
-| Tests | pytest on Python 3.12, 3.13 and 3.14, with coverage |
+| Tests | pytest on Python 3.15, with coverage |
 | Packer-only install | Builds the wheel, installs it with no extras, packs an APK |
 | Alembic migrations | upgrade → downgrade → upgrade, plus a schema-drift check |
 | Docs | `mkdocs build --strict` |
@@ -234,7 +236,7 @@ its references.
 | Android stub | Builds the stub AAR |
 | Docker build | Builds the image, starts it, and serves a request |
 
-The Python matrix includes 3.14 because that is what the Docker image ships.
+All Python jobs and the Docker image use Python 3.15.
 
 The packer-only job guards two regressions this repository has already had:
 `stub.dex` missing from the wheel, and server dependencies leaking into the base

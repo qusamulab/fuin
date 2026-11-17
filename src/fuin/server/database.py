@@ -38,12 +38,12 @@ class App(Base):
     mapping_path: Mapped[str | None] = mapped_column(String, nullable=True)
     created_at: Mapped[datetime | None] = mapped_column(DateTime, server_default=func.now())
 
-    webhooks: Mapped[list["AppWebhook"]] = relationship(
+    webhooks: Mapped[list[AppWebhook]] = relationship(
         back_populates="app",
         cascade="all, delete-orphan",
         passive_deletes=True,
     )
-    jobs: Mapped[list["JobRecord"]] = relationship(back_populates="app", passive_deletes=True)
+    jobs: Mapped[list[JobRecord]] = relationship(back_populates="app", passive_deletes=True)
 
     __table_args__ = (Index("ix_apps_created_at", "created_at"),)
 
@@ -59,7 +59,7 @@ class AppWebhook(Base):
     )
     url: Mapped[str] = mapped_column(String, nullable=False)
 
-    app: Mapped["App"] = relationship(back_populates="webhooks")
+    app: Mapped[App] = relationship(back_populates="webhooks")
 
     __table_args__ = (Index("ix_app_webhooks_app_id", "app_id"),)
 
@@ -80,7 +80,7 @@ class JobRecord(Base):
     created_at: Mapped[datetime | None] = mapped_column(DateTime, server_default=func.now())
     finished_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
 
-    app: Mapped["App | None"] = relationship(back_populates="jobs")
+    app: Mapped[App | None] = relationship(back_populates="jobs")
 
     __table_args__ = (Index("ix_jobs_created_at", "created_at"),)
 

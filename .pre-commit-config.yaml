@@ -1,6 +1,9 @@
+default_language_version:
+  python: python3.15
+
 repos:
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.15.12
+    rev: v0.17.5
     hooks:
       - id: ruff
         args: [--fix]

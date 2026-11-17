@@ -54,7 +54,7 @@ CLI users are not made to install FastAPI, SQLAlchemy and friends.
 
 | | |
 |---|---|
-| **Python** | 3.12 or newer |
+| **Python** | 3.15 or newer |
 | **Android build-tools** | Optional. Used for `zipalign` and `apksigner` when present; fuin falls back to a pure-Python implementation of both. |
 | **JDK 17** | Only needed to rebuild the stub DEX from source. |
 
@@ -115,6 +115,8 @@ For working on fuin itself, or running the server without Docker.
 
 `uv sync --all-extras` is what you want for development — plain `uv sync` installs the
 packer only, and the tests need the server dependencies.
+
+The repository's `.python-version` selects Python 3.15 for local development.
 
 See **[Development](../development/index.md)** for the test, lint and type-check
 workflow.

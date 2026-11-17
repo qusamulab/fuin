@@ -1,5 +1,5 @@
 # /// script
-# requires-python = ">=3.12"
+# requires-python = ">=3.15"
 # dependencies = ["Pillow>=12"]
 # ///
 """Encode timestamped browser recording frames as the documentation demo GIF.

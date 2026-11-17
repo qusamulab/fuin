@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- Require Python 3.15 or newer. Local development, CI, the GitHub Action default
+  and the Docker image now use Python 3.15, with compatible native dependencies.
+
 ## [2.1.0] - 2026-10-26
 
 Consistent APK selection and progress reporting, signing and alignment fixes,
