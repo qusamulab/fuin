@@ -46,7 +46,7 @@ dev = [
     "pre-commit>=4.6.2",
     "ruff>=0.17.5",
     "pytest>=9.1.1",
-    "pytest-asyncio>=1.4.0",
+    "pytest-asyncio>=1.5.0",
     "pytest-cov>=7.0.0",
     "mypy>=2.4.1",
     # Pinned below 2.0: MkDocs 2.0 removes the plugin system outright.
