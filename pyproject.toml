@@ -16,7 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 server = [
-    "fastapi>=0.163.1",
+    "fastapi>=0.165.0",
     "uvicorn[standard]>=0.51.0",
     "python-multipart>=0.0.34",
     "sqlalchemy>=2.1.9",
